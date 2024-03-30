@@ -56,17 +56,17 @@ impl MarkdownChatMessage {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let chat = std::fs::read_to_string("chats/first.md").unwrap();
-    let chat: Vec<&str> = chat.split("---").collect();
-    let chat: Vec<&str> = chat.iter().map(|x| x.trim()).collect();
-    let chat: Vec<MarkdownChatMessage> = chat
-        .iter()
+    let openai_api_key = std::env::var("OPENAI_API_KEY")?;
+    let chat: Vec<ChatMessage> = std::fs::read_to_string("chats/first.md")?
+        .split("---")
+        .map(|x| x.trim())
         .map(|x| MarkdownChatMessage::from_string(x).unwrap())
+        .map(|x| x.to_chat_message())
         .collect();
-    let chat: Vec<ChatMessage> = chat.iter().map(|x| x.to_chat_message()).collect();
-    let api_key = std::env::var("OPENAI_API_KEY")?;
-    let gpt = ChatGPT::new(api_key)?;
-    let stream = gpt.send_history_streaming(&chat).await?;
+
+    let chat_gpt = ChatGPT::new(openai_api_key)?;
+    let stream = chat_gpt.send_history_streaming(&chat).await?;
+    println!("### Assistant");
     stream
         .for_each(|each| async move {
             match each {
@@ -74,9 +74,7 @@ async fn main() -> anyhow::Result<()> {
                     delta,
                     response_index: _,
                 } => {
-                    // Printing part of response without the newline
                     print!("{delta}");
-                    // Manually flushing the standard output, as `print` macro does not do that
                     stdout().lock().flush().unwrap();
                 }
                 _ => {}
@@ -84,5 +82,6 @@ async fn main() -> anyhow::Result<()> {
         })
         .await;
     println!();
+    println!("---");
     Ok(())
 }
