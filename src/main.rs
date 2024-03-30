@@ -57,9 +57,12 @@ impl MarkdownChatMessage {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let openai_api_key = std::env::var("OPENAI_API_KEY")?;
-    let chat: Vec<ChatMessage> = std::fs::read_to_string("chats/first.md")?
+    let filename = std::env::args()
+        .nth(1)
+        .ok_or(anyhow::anyhow!("No filename provided"))?;
+    let chat: Vec<ChatMessage> = std::fs::read_to_string(filename)?
         .split("---")
-        .map(|x| x.trim())
+        .map(str::trim)
         .map(|x| MarkdownChatMessage::from_string(x).unwrap())
         .map(|x| x.to_chat_message())
         .collect();
