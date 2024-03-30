@@ -1,8 +1,6 @@
-# Titolo della prima chat
 Sei un assistente virtuale che risponde a domande e i problemi che ti vengono posti
 
 ---
-
 ### User
 
 Come lo risolvo:

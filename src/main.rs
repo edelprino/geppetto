@@ -25,8 +25,10 @@ impl MarkdownChatMessage {
             Ok(MarkdownChatMessage::FromUser(body))
         } else if s.starts_with("### Assistant") {
             Ok(MarkdownChatMessage::FromAssistant(body))
-        } else {
+        } else if s.starts_with("# ") {
             Ok(MarkdownChatMessage::System(body))
+        } else {
+            Ok(MarkdownChatMessage::System(s.to_string()))
         }
     }
 
@@ -66,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
         .map(|x| MarkdownChatMessage::from_string(x).unwrap())
         .map(|x| x.to_chat_message())
         .collect();
+    println!("{:#?}", chat);
 
     let chat_gpt = ChatGPT::new(openai_api_key)?;
     let stream = chat_gpt.send_history_streaming(&chat).await?;
