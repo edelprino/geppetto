@@ -1,4 +1,7 @@
-use std::io::{stdout, Write};
+use std::{
+    io::{stdout, Write},
+    sync::{Arc, Mutex},
+};
 
 use anyhow::Result;
 use chatgpt::{
@@ -63,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
         .nth(1)
         .ok_or(anyhow::anyhow!("No filename provided"))?;
     let chat: Vec<ChatMessage> = std::fs::read_to_string(filename)?
-        .split("---")
+        .split("---\n")
         .map(str::trim)
         .map(|x| MarkdownChatMessage::from_string(x).unwrap())
         .map(|x| x.to_chat_message())
@@ -93,5 +96,22 @@ async fn main() -> anyhow::Result<()> {
     println!("---");
     println!("### User");
     println!();
+
     Ok(())
+}
+
+fn confirm(message: &str) -> bool {
+    loop {
+        println!("{} (y/n)", message);
+        let mut input = String::new();
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("Errore durante la lettura dell'input");
+
+        match input.trim() {
+            "y" => return true,
+            "n" => return false,
+            _ => println!("Risposta non valida. Riprova."),
+        }
+    }
 }
