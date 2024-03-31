@@ -68,11 +68,12 @@ async fn main() -> anyhow::Result<()> {
         .map(|x| MarkdownChatMessage::from_string(x).unwrap())
         .map(|x| x.to_chat_message())
         .collect();
-    println!("{:#?}", chat);
 
     let chat_gpt = ChatGPT::new(openai_api_key)?;
     let stream = chat_gpt.send_history_streaming(&chat).await?;
+    println!("---");
     println!("### Assistant");
+    println!();
     stream
         .for_each(|each| async move {
             match each {
@@ -88,6 +89,9 @@ async fn main() -> anyhow::Result<()> {
         })
         .await;
     println!();
+    println!();
     println!("---");
+    println!("### User");
+    println!();
     Ok(())
 }
