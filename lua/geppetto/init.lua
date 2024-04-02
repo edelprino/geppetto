@@ -1,28 +1,38 @@
-vim.keymap.set('n', '<leader>a', function()
-  local path = CreateNewChatFile()
-  vim.cmd("e " .. path)
-  vim.cmd('normal G')
-  vim.cmd('startinsert')
-end, { silent = true, noremap = false })
+-- vmap('<leader>ai', "\"gy :terminal 'chatgpt vim.fn.getreg('g')'<cr>", '')
+-- nmap('<leader>ai', ":terminal chatgpt -i<cr>", '')
+-- nmap('<leader>ap', ":lua chatgpt_prompts()<cr>", '')
+-- vim.keymap.set('v', '<leader>r', function() require("chatgpt").edit_with_instructions() end, { silent = true, noremap = false })
+-- print("filegpt.lua loaded")
 
-vim.keymap.set('v', '<leader>a', function()
-  local path = CreateNewChatFile("```\n" .. GetVisualSelection() .. "\n```")
-  vim.cmd("e " .. path)
-  vim.cmd('normal G')
-  vim.cmd('startinsert')
-end, { silent = true, noremap = false })
+local M = {}
 
-vim.keymap.set('n', '<leader>aa', function()
-  GeppettoRun()
-end, { silent = false, noremap = false })
+function M.setup()
+  vim.keymap.set('n', '<leader>a', function()
+    local path = M.CreateNewChatFile()
+    vim.cmd("e " .. path)
+    vim.cmd('normal G')
+    vim.cmd('startinsert')
+  end, { silent = true, noremap = false })
 
-function GetVisualSelection()
+  vim.keymap.set('v', '<leader>a', function()
+    local path = M.CreateNewChatFile("```\n" .. M.GetVisualSelection() .. "\n```")
+    vim.cmd("e " .. path)
+    vim.cmd('normal G')
+    vim.cmd('startinsert')
+  end, { silent = true, noremap = false })
+
+  vim.keymap.set('n', '<leader>aa', function()
+    M.Run()
+  end, { silent = false, noremap = false })
+end
+
+function M.GetVisualSelection()
   vim.cmd('noau normal! "vy"')
   vim.print(vim.fn.getreg("v"))
   return vim.fn.getreg("v")
 end
 
-function CreateNewChatFile(content)
+function M.CreateNewChatFile(content)
   local date = os.date("%Y.%m.%d-%H.%M.%S")
   local path = "/tmp/" .. date .. ".md"
   local file, errore = io.open(path, "w")
@@ -45,15 +55,10 @@ function CreateNewChatFile(content)
   return path
 end
 
-function GeppettoRun()
+function M.Run()
   local path = vim.fn.expand("%:p")
   local cmd = "/Users/edelprino/Projects/Personali/geppetto/target/debug/geppetto " .. path
   vim.cmd("vsplit | terminal " .. cmd)
 end
 
--- Chat GPT
--- vmap('<leader>ai', "\"gy :terminal 'chatgpt vim.fn.getreg('g')'<cr>", '')
--- nmap('<leader>ai', ":terminal chatgpt -i<cr>", '')
--- nmap('<leader>ap', ":lua chatgpt_prompts()<cr>", '')
--- vim.keymap.set('v', '<leader>r', function() require("chatgpt").edit_with_instructions() end, { silent = true, noremap = false })
--- print("filegpt.lua loaded")
+return M
