@@ -19,8 +19,15 @@ function M.setup()
   end, { silent = true, noremap = false })
 
   vim.keymap.set('n', '<leader>aa', function()
-    -- M.run_on_current_file()
     M.run_stream()
+  end, { silent = false, noremap = false })
+
+  vim.keymap.set('n', '<leader>ao', function()
+    M.run_on_current_file()
+  end, { silent = false, noremap = false })
+
+  vim.keymap.set('n', '<leader>al', function()
+    M.open_file(M.get_latest_chat_file())
   end, { silent = false, noremap = false })
 end
 
@@ -86,6 +93,7 @@ function M.run_stream()
   local path = vim.fn.expand("%:p")
   local handle
   local loop = vim.loop
+  vim.cmd("w")
 
   local function update_last_line(buf, new_text, contains_newline)
     local line_count = vim.api.nvim_buf_line_count(buf)
@@ -107,26 +115,25 @@ function M.run_stream()
 
   local function on_read(err, data)
     if err then
-      -- Gestisci errore
       print("Errore:", err)
-    elseif data then
+      return
+    end
+
+    if data then
       vim.schedule(function()
         local buf = vim.api.nvim_get_current_buf()
         if data:find("\n") then
-          -- Se 'data' contiene newline, gestiscila di conseguenza
           local parts = vim.split(data, "\n")
           for i, part in ipairs(parts) do
             update_last_line(buf, part, i < #parts)
           end
         else
-          -- Altrimenti, aggiorna semplicemente l'ultima riga
           update_last_line(buf, data, false)
         end
       end)
     end
   end
 
-  -- Creazione delle pipe per l'output e l'errore
   local stdout = loop.new_pipe(false)
   local stderr = loop.new_pipe(false)
 
@@ -135,6 +142,10 @@ function M.run_stream()
     vim.loop.close(handle)
     stdout:close()
     stderr:close()
+    vim.schedule(function()
+      vim.cmd("normal! G")
+      vim.cmd("normal! 2dk")
+    end)
   end
 
   vim.schedule(function()
